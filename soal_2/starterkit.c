@@ -13,12 +13,12 @@
 #include <ctype.h>
 
 #define MAX_PATH 512
+#define MAX_FILENAME 256
 #define STARTER_ZIP "starter_kit.zip"
 #define STARTER_DIR "starter_kit"
 #define QUARANTINE_DIR "quarantine"
 #define LOG_FILE "activity.log"
 
-// Fungsi untuk mencatat aktivitas ke file log dengan format waktu [dd-mm-YYYY][HH:MM:SS]
 void log_activity(const char *message) {
     FILE *log = fopen(LOG_FILE, "a");
     if (!log) return;
@@ -34,27 +34,22 @@ void log_activity(const char *message) {
     fclose(log);
 }
 
-// Memastikan direktori quarantine tersedia
 void ensure_directories() {
     mkdir(QUARANTINE_DIR, 0755);
 }
 
-// Cek apakah folder exist
 int folder_exists(const char *path) {
     struct stat st;
     return (stat(path, &st) == 0 && S_ISDIR(st.st_mode));
 }
 
-// Cek apakah file exist
 int file_exists(const char *path) {
     return access(path, F_OK) == 0;
 }
 
-// Fungsi download starter kit dan unzip otomatis
 void download_and_unzip() {
     if (folder_exists(STARTER_DIR)) return;
 
-    // Download file ZIP
     printf("Mendownload starter kit...\n");
     pid_t pid = fork();
     if (pid == 0) {
@@ -72,7 +67,6 @@ void download_and_unzip() {
         }
     }
 
-    // Unzip hasil download
     printf("Unzipping starter kit...\n");
     pid = fork();
     if (pid == 0) {
@@ -83,11 +77,9 @@ void download_and_unzip() {
         wait(NULL);
     }
 
-    // Hapus zip setelah ekstrak
     remove(STARTER_ZIP);
 }
 
-// Cek apakah nama file valid base64
 int is_valid_base64(const char *str) {
     size_t len = strlen(str);
     if (len % 4 != 0) return 0;
@@ -99,7 +91,6 @@ int is_valid_base64(const char *str) {
     return 1;
 }
 
-// Dekripsi base64 pakai pipe ke command `base64 -d`
 char *base64_decode(const char *src) {
     int pipe_in[2], pipe_out[2];
     pipe(pipe_in);
@@ -107,7 +98,6 @@ char *base64_decode(const char *src) {
 
     pid_t pid = fork();
     if (pid == 0) {
-        // Anak proses: decode base64
         dup2(pipe_in[0], STDIN_FILENO);
         dup2(pipe_out[1], STDOUT_FILENO);
         close(pipe_in[1]);
@@ -116,56 +106,47 @@ char *base64_decode(const char *src) {
         exit(EXIT_FAILURE);
     }
 
-    // Proses induk: kirim data dan ambil hasil
     close(pipe_in[0]);
     close(pipe_out[1]);
     write(pipe_in[1], src, strlen(src));
     close(pipe_in[1]);
 
-    char *decoded = calloc(MAX_PATH, 1);
-    read(pipe_out[0], decoded, MAX_PATH);
+    char *decoded = calloc(MAX_FILENAME, 1);
+    read(pipe_out[0], decoded, MAX_FILENAME - 1);
     close(pipe_out[0]);
 
     waitpid(pid, NULL, 0);
     return decoded;
 }
 
-// Daemon untuk decrypt nama file base64 jadi readable
 void daemon_decryptor() {
     pid_t pid = fork();
-    if (pid > 0) return; // Parent process selesai
+    if (pid > 0) return;
 
     if (pid == 0) {
-        setsid(); // Jadi proses daemon
+        setsid();
 
-        // Logging start daemon
         char logmsg[512];
         snprintf(logmsg, sizeof(logmsg), "Successfully started decryption process with PID %d.", getpid());
         log_activity(logmsg);
 
-        // Loop cek dan rename file setiap 5 detik
         while (1) {
             DIR *d = opendir(STARTER_DIR);
             if (!d) continue;
+
             struct dirent *f;
             while ((f = readdir(d))) {
                 if (f->d_type == DT_REG && is_valid_base64(f->d_name)) {
-                    char path[MAX_PATH], newname[MAX_PATH];
-                    snprintf(path, sizeof(path), "%s/%s", STARTER_DIR, f->d_name);
-                    char *decoded = base64_decode(f->d_name);
-                    if (!decoded) continue;
-                    snprintf(newname, sizeof(newname), "%s/%s", STARTER_DIR, decoded);
-                    rename(path, newname);
-                    free(decoded);
+                    // tidak mencatat aktivitas
                 }
             }
+
             closedir(d);
             sleep(5);
         }
     }
 }
 
-// Memindahkan semua file dari satu folder ke lainnya dan log aktivitasnya
 void move_files(const char *from, const char *to, const char *log_format) {
     DIR *d = opendir(from);
     if (!d) return;
@@ -174,17 +155,33 @@ void move_files(const char *from, const char *to, const char *log_format) {
     while ((f = readdir(d))) {
         if (f->d_type == DT_REG) {
             char src[MAX_PATH], dest[MAX_PATH], logmsg[512];
-            snprintf(src, sizeof(src), "%s/%s", from, f->d_name);
-            snprintf(dest, sizeof(dest), "%s/%s", to, f->d_name);
+            char filename[MAX_FILENAME];
+            strncpy(filename, f->d_name, MAX_FILENAME - 1);
+            filename[MAX_FILENAME - 1] = '\0';
+
+            if (is_valid_base64(filename)) {
+                char *decoded = base64_decode(filename);
+                if (decoded) {
+                    snprintf(dest, MAX_PATH, "%s/%s", to, decoded);
+                    free(decoded);
+                } else {
+                    snprintf(dest, MAX_PATH, "%s/%s", to, filename);
+                }
+            } else {
+                snprintf(dest, MAX_PATH, "%s/%s", to, filename);
+            }
+
+            snprintf(src, MAX_PATH, "%s/%s", from, filename);
             rename(src, dest);
-            snprintf(logmsg, sizeof(logmsg), log_format, f->d_name);
+
+            snprintf(logmsg, sizeof(logmsg), log_format, filename);
             log_activity(logmsg);
         }
     }
+
     closedir(d);
 }
 
-// Menghapus semua file di karantina dan log
 void delete_quarantine_files() {
     DIR *d = opendir(QUARANTINE_DIR);
     if (!d) return;
@@ -193,20 +190,19 @@ void delete_quarantine_files() {
     while ((f = readdir(d))) {
         if (f->d_type == DT_REG) {
             char path[MAX_PATH], logmsg[512];
-            snprintf(path, sizeof(path), "%s/%s", QUARANTINE_DIR, f->d_name);
+            snprintf(path, MAX_PATH, "%s/%s", QUARANTINE_DIR, f->d_name);
             remove(path);
             snprintf(logmsg, sizeof(logmsg), "%s - Successfully deleted.", f->d_name);
             log_activity(logmsg);
         }
     }
+
     closedir(d);
 }
 
-// Shutdown daemon decrypt
 void shutdown_decryptor() {
     pid_t pid = fork();
     if (pid == 0) {
-        // Kill semua proses `starterkit --decrypt`
         char *args[] = {"/bin/sh", "-c", "pkill -f 'starterkit --decrypt'", NULL};
         execv("/bin/sh", args);
         exit(1);
