@@ -9,19 +9,12 @@
 2. [Soal 2](#soal-2)
 4. [Soal 4](#soal-4)
 
-## Soal 1 
-## Soal 2
+## Soal 1
 ### Oleh: Ni'mah Fauziyyah A
 
 ### Soal 
-``
 Kamu terbangun secara tiba-tiba di suatu lokasi (https://dragon-pw-checker.vercel.app/) yang tidak diketahui, saat kamu melihat sekitar yang terlihat hanyalah kegelapan dan sebuah pintu dengan dua mata berwarna yang melihatmu dari lubang pintu tersebut. <br>
-
-Ia merupakan naga bernama Cyrus yang menjaga pintu tersebut dan kamu harus meng-input password yang benar untuk masuk. 
-Karena tidak mungkin untuk menebak password, Ia memberikanmu sebuah clue Clues.zip 
-(https://drive.google.com/file/d/1xFn1OBJUuSdnApDseEczKhtNzyGekauK/view). 
-Untungnya, kamu merupakan Directory Lister yang jago sehingga clue ini dapat berubah menjadi sebuah password.
-``
+Ia merupakan naga bernama Cyrus yang menjaga pintu tersebut dan kamu harus meng-input password yang benar untuk masuk. Karena tidak mungkin untuk menebak password, Ia memberikanmu sebuah clue Clues.zip (https://drive.google.com/file/d/1xFn1OBJUuSdnApDseEczKhtNzyGekauK/view). Untungnya, kamu merupakan Directory Lister yang jago sehingga clue ini dapat berubah menjadi sebuah password.
 
 ### Jawaban
 
@@ -206,4 +199,6 @@ dengan cara di-input ke lokasi (https://dragon-pw-checker.vercel.app/) tadi.
 ---
 #### F. Kesimpulan  
 Program ini membantu "Observer" dalam menganalisis clues yang tersebar, memastikan hanya fragment yang valid diproses, dan menerjemahkan pesan tersembunyi dari Seeker menggunakan ROT13. Dengan modularitas fungsi, program lebih terstruktur dan mudah dikembangkan untuk kebutuhan misi selanjutnya.
+
+## Soal 2
 ## Soal 4
