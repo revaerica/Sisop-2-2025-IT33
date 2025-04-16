@@ -56,9 +56,34 @@ void listProcess(const char *user) {
         return;
     }
 
-    printf("Process list for user %s:\n", user);
-    printf("PID\tCOMMAND\t\tCPU(s)\tMEM(KB)\n");
+    FILE *meminfo = fopen("/proc/meminfo", "r");
+    unsigned long memTotal = 0;
+    char line[BUFSIZE];
+    if (meminfo) {
+        while (fgets(line, sizeof(line), meminfo)) {
+            if (sscanf(line, "MemTotal: %lu kB", &memTotal) == 1)
+                break;
+        }
+        fclose(meminfo);
+    }
 
+    FILE *statfile = fopen("/proc/stat", "r");
+    unsigned long long totalCpuTime = 0;
+    if (statfile) {
+        fgets(line, sizeof(line), statfile);
+        unsigned long long user, nice, system, idle, iowait, irq, softirq, steal;
+        sscanf(line, "cpu  %llu %llu %llu %llu %llu %llu %llu %llu",
+               &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal);
+        totalCpuTime = user + nice + system + idle + iowait + irq + softirq + steal;
+        fclose(statfile);
+    }
+
+    printf("==================================================================");
+    printf("Process list for user %s:\n", user);
+    printf("==================================================================");
+    printf("PID\tCOMMAND\t\tCPU(s)\tMEM(KB)\tCPU(%%)\tMEM(%%)\n");
+    printf("------------------------------------------------------------------");
+   
     struct dirent *ent;
     while ((ent = readdir(proc)) != NULL) {
         if (!isdigit(ent->d_name[0])) continue;
@@ -100,7 +125,19 @@ void listProcess(const char *user) {
             }
 
             double cpu_time = (double)(utime + stime) / sysconf(_SC_CLK_TCK);
-            printf("%s\t%s\t%.1f\t%lu\n", ent->d_name, name, cpu_time, mem);
+
+            double cpu_usage = 0.0;
+            if (totalCpuTime > 0) {
+                cpu_usage = 100.0 * (utime + stime) / totalCpuTime;
+            }
+
+            double mem_usage = 0.0;
+            if (memTotal > 0) {
+                mem_usage = 100.0 * mem / memTotal;
+            }
+
+            printf("%s\t%-15s\t%.1f\t%lu\t%.2f\t%.2f\n",
+                ent->d_name, name, cpu_time, mem, cpu_usage, mem_usage);
             tulisLog(name, "RUNNING");
         }
     }
