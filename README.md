@@ -204,7 +204,6 @@ Program ini membantu "Observer" dalam menganalisis clues yang tersebar, memastik
 ### Oleh: Ni'mah Fauziyyah A
 
 ### Soal
-``
 Kanade Yoisaki, seorang siswi SMA yang nolep dan composer handal,mengalami masalah pada komputernya yang terkena malware ringan. Bersama dengan Mizuki, Mafuyu, dan Ena, mereka mencoba membangun sistem starter kit pendeteksi virus. Dari soal ini diminta membantu dengan membangun program `starterkit` yang mampu: <br>
 - Mendownload dan unzip starter kit. <br>
 - Menjalankan proses dekripsi nama file terenkripsi base64. <br>
@@ -213,7 +212,6 @@ Kanade Yoisaki, seorang siswi SMA yang nolep dan composer handal,mengalami masal
 - Mematikan daemon dekripsi. <br>
 - Menangani error dari argumen. <br>
 - Mencatat semua aktivitas ke dalam activity.log. <br>
-``
 
 ### Jawaban
 
