@@ -34,10 +34,6 @@ void log_activity(const char *message) {
     fclose(log);
 }
 
-void ensure_directories() {
-    mkdir(QUARANTINE_DIR, 0755);
-}
-
 int folder_exists(const char *path) {
     struct stat st;
     return (stat(path, &st) == 0 && S_ISDIR(st.st_mode));
@@ -215,14 +211,22 @@ void shutdown_decryptor() {
 }
 
 int main(int argc, char *argv[]) {
-    ensure_directories();
     download_and_unzip();
 
-    if (argc == 1) return 0;
+    if (argc != 2) {
+        printf("Penggunaan:\n");
+        printf(" ./starterkit --decrypt\n");
+        printf(" ./starterkit --quarantine\n");
+        printf(" ./starterkit --return\n");
+        printf(" ./starterkit --eradicate\n");
+        printf(" ./starterkit --shutdown\n");
+        return 1;
+    }
 
     if (strcmp(argv[1], "--decrypt") == 0) {
         daemon_decryptor();
     } else if (strcmp(argv[1], "--quarantine") == 0) {
+        mkdir(QUARANTINE_DIR, 0755);
         move_files(STARTER_DIR, QUARANTINE_DIR, "%s - Successfully moved to quarantine directory.");
     } else if (strcmp(argv[1], "--return") == 0) {
         move_files(QUARANTINE_DIR, STARTER_DIR, "%s - Successfully returned to starter kit directory.");
