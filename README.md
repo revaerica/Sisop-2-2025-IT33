@@ -455,25 +455,235 @@ Doraemon ingin melihat apa saja yang sedang dijalankan user di komputernya. Maka
 **./debugmon list <user>**
 Debugmon langsung menampilkan daftar semua proses yang sedang berjalan pada user tersebut beserta PID, command, CPU usage, dan memory usage.
 
+##### Code
+```
+void listProcess(const char *user) {
+    uid_t target_uid = get_uid(user);
+    if (target_uid == (uid_t)-1) return;
+
+    DIR *proc = opendir("/proc");
+    if (!proc) {
+        perror("Failed to open /proc");
+        return;
+    }
+
+    FILE *meminfo = fopen("/proc/meminfo", "r");
+    unsigned long memTotal = 0;
+    char line[BUFSIZE];
+    if (meminfo) {
+        while (fgets(line, sizeof(line), meminfo)) {
+            if (sscanf(line, "MemTotal: %lu kB", &memTotal) == 1)
+                break;
+        }
+        fclose(meminfo);
+    }
+
+    FILE *statfile = fopen("/proc/stat", "r");
+    unsigned long long totalCpuTime = 0;
+    if (statfile) {
+        fgets(line, sizeof(line), statfile);
+        unsigned long long user, nice, system, idle, iowait, irq, softirq, steal;
+        sscanf(line, "cpu  %llu %llu %llu %llu %llu %llu %llu %llu",
+               &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal);
+        totalCpuTime = user + nice + system + idle + iowait + irq + softirq + steal;
+        fclose(statfile);
+    }
+
+    printf("==================================================================\n");
+    printf("Process list for user %s:\n", user);
+    printf("==================================================================\n");
+    printf("PID\tCOMMAND\t\tCPU(s)\tMEM(KB)\tCPU(%%)\tMEM(%%)\n");
+    printf("------------------------------------------------------------------\n");
+   
+    struct dirent *ent;
+    while ((ent = readdir(proc)) != NULL) {
+        if (!isdigit(ent->d_name[0])) continue;
+
+        char statuspath[BUFSIZE];
+        snprintf(statuspath, BUFSIZE, "/proc/%s/status", ent->d_name);
+
+        FILE *f = fopen(statuspath, "r");
+        if (!f) continue;
+
+        char line[BUFSIZE];
+        uid_t uid = -1;
+        char name[64] = "";
+        unsigned long mem = 0;
+
+        while (fgets(line, sizeof(line), f)) {
+            if (strncmp(line, "Uid:", 4) == 0)
+                sscanf(line, "Uid:\t%d", &uid);
+            else if (strncmp(line, "Name:", 5) == 0)
+                sscanf(line, "Name:\t%63s", name);
+            else if (strncmp(line, "VmRSS:", 6) == 0)
+                sscanf(line, "VmRSS:\t%lu", &mem);
+        }
+        fclose(f);
+
+        if (uid == target_uid) {
+            char statpath[BUFSIZE];
+            snprintf(statpath, BUFSIZE, "/proc/%s/stat", ent->d_name);
+
+            FILE *statfile = fopen(statpath, "r");
+            unsigned long utime = 0, stime = 0;
+            if (statfile) {
+                int dummy;
+                char comm[256], state;
+                fscanf(statfile, "%d %s %c", &dummy, comm, &state);
+                for (int i = 0; i < 11; i++) fscanf(statfile, "%*s");
+                fscanf(statfile, "%lu %lu", &utime, &stime);
+                fclose(statfile);
+            }
+
+            double cpu_time = (double)(utime + stime) / sysconf(_SC_CLK_TCK);
+
+            double cpu_usage = 0.0;
+            if (totalCpuTime > 0) {
+                cpu_usage = 100.0 * (utime + stime) / totalCpuTime;
+            }
+
+            double mem_usage = 0.0;
+            if (memTotal > 0) {
+                mem_usage = 100.0 * mem / memTotal;
+            }
+
+            printf("%s\t%-15s\t%.1f\t%lu\t%.2f\t%.2f\n",
+                ent->d_name, name, cpu_time, mem, cpu_usage, mem_usage);
+            tulisLog(name, "RUNNING");
+        }
+    }
+    closedir(proc);
+}
+```
+
 #### b. Memasang mata-mata dalam mode daemon
 Doraemon ingin agar Debugmon terus memantau user secara otomatis. Doraemon pun menjalankan program ini secara daemon dan melakukan pencatatan ke dalam file log dengan menjalankan:
 **./debugmon daemon <user>**
 
+##### Code
+```
+void daemonUser(const char *user) {
+    pid_t pid = fork();
+    if (pid < 0) exit(EXIT_FAILURE);
+    if (pid > 0) {
+        char pidfile[BUFSIZE];
+        snprintf(pidfile, sizeof(pidfile), PIDFILE_FMT, user);
+        FILE *f = fopen(pidfile, "w");
+        if (f) {
+            fprintf(f, "%d\n", pid);
+            fclose(f);
+        }
+        exit(EXIT_SUCCESS);
+    }
+
+    umask(0);
+    setsid();
+    chdir("/");
+
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+
+    uid_t target_uid = get_uid(user);
+
+    while (1) {
+        if (!isUserBlocked(user)) {
+            DIR *proc = opendir("/proc");
+            struct dirent *ent;
+            while ((ent = readdir(proc)) != NULL) {
+                if (!isdigit(ent->d_name[0])) continue;
+
+                char statuspath[BUFSIZE];
+                snprintf(statuspath, BUFSIZE, "/proc/%s/status", ent->d_name);
+
+                FILE *f = fopen(statuspath, "r");
+                if (!f) continue;
+
+                char line[BUFSIZE];
+                uid_t uid = -1;
+                char name[64] = "";
+                while (fgets(line, sizeof(line), f)) {
+                    if (strncmp(line, "Uid:", 4) == 0)
+                        sscanf(line, "Uid:\t%d", &uid);
+                    else if (strncmp(line, "Name:", 5) == 0)
+                        sscanf(line, "Name:\t%63s", name);
+                }
+                fclose(f);
+
+                if (uid == target_uid) {
+                    tulisLog(name, "RUNNING");
+                }
+            }
+            closedir(proc);
+        }
+        sleep(5);
+    }
+}
+```
+
 #### c.	Menghentikan pengawasan
 User mulai panik karena setiap gerak-geriknya diawasi! Dia pun memohon pada Doraemon untuk menghentikannya dengan:
 **./debugmon stop <user>**
+
+##### Code 
+```
+void stopProcess(const char *user) {
+    char pidfile[BUFSIZE];
+    snprintf(pidfile, sizeof(pidfile), PIDFILE_FMT, user);
+
+    FILE *f = fopen(pidfile, "r");
+    if (!f) {
+        printf("No active daemon found for user %s.\n", user);
+        return;
+    }
+
+    pid_t pid;
+    fscanf(f, "%d", &pid);
+    fclose(f);
+
+    if (kill(pid, SIGTERM) == 0) {
+        remove(pidfile);
+        tulisLog("debugmon_stop", "RUNNING");
+        printf("Monitoring stopped.\n");
+    } else {
+        perror("Failed to stop daemon");
+    }
+}
+```
 
 #### d.	Menggagalkan semua proses user yang sedang berjalan
 Doraemon yang iseng ingin mengerjai user dengan mengetik:
 **./debugmon fail <user>**
 Debugmon langsung menggagalkan semua proses yang sedang berjalan dan menulis status proses ke dalam file log dengan status FAILED. Selain menggagalkan, user juga tidak bisa menjalankan proses lain dalam mode ini.
 
+##### Code
+
 #### e.	Mengizinkan user untuk kembali menjalankan proses
 Karena kasihan, Shizuka meminta Doraemon untuk memperbaiki semuanya. Doraemon pun menjalankan:
 **./debugmon revert <user>**
 Debugmon kembali ke mode normal dan bisa menjalankan proses lain seperti biasa.
 
+##### Code
+
 #### f.	Mencatat ke dalam file log
 Sebagai dokumentasi untuk mengetahui apa saja yang debugmon lakukan di komputer user, debugmon melakukan pencatatan dan penyimpanan ke dalam file debugmon.log untuk semua proses yang dijalankan dengan format
 **[dd:mm:yyyy]-[hh:mm:ss]_nama-process_STATUS(RUNNING/FAILED)**
 Untuk poin b, c, dan e, status proses adalah RUNNING. Sedangkan untuk poin d, status proses adalah FAILED. 
+
+##### Code
+```
+void tulisLog(const char *procName, const char *status) {
+    FILE *log = fopen(LOGFILE, "a");
+    if (!log) {
+        perror("Failed to open log file");
+        return;
+    }
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    fprintf(log, "[%02d:%02d:%04d]-[%02d:%02d:%02d]_%s_%s\n",
+        t->tm_mday, t->tm_mon+1, t->tm_year+1900,
+        t->tm_hour, t->tm_min, t->tm_sec,
+        procName, status);
+    fclose(log);
+}
+```
