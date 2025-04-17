@@ -78,7 +78,7 @@ void listProcess(const char *user) {
         fclose(statfile);
     }
 
-    printf("==================================================================");
+    printf("==================================================================\n");
     printf("Process list for user %s:\n", user);
     printf("==================================================================\n");
     printf("PID\tCOMMAND\t\tCPU(s)\tMEM(KB)\tCPU(%%)\tMEM(%%)\n");
