@@ -519,7 +519,9 @@ void listProcess(const char *user) {
  }
 ```
 
+
 ##### Revisi Code
+Menambahkan presentase CPU dan MEM
 ```
 void listProcess(const char *user) {
     uid_t target_uid = get_uid(user);
