@@ -793,18 +793,26 @@ daemonUser() membuat background service yang
 - Tiap 5 detik cek semua proses di ``/proc``
 - Kalau proses milik user target → tulis log “RUNNING”
 - Gak ngapa-ngapain kalau user-nya sedang diblokir (cek pakai ``isUserBlocked()``)
+
   1. Fork proses
      a. Kalau fork gagal → exit.
+     
      b. Kalau di parent >> menyimpan PID child ke file ``PIDFILE_FMT``. lalu Parent keluar.
-  2. Setup daemon di child
+     
+  3. Setup daemon di child
      a. Set ``umask(0)``.
+
      b. Buat session baru manggunakan ``setsid()``.
+
      c. Pindah ke root directory /.
+
      d. Tutup stdin, stdout, stderr biar lepas dari terminal.
-  3. Mengambil UID target menggunakan ``get_uid(user)``.
-  4. Loop terus menerus menggunakan ``while(1)``.
-  5. Di tiap iterasi
+     
+  5. Mengambil UID target menggunakan ``get_uid(user)``.
+  6. Loop terus menerus menggunakan ``while(1)``.
+  7. Di tiap iterasi
      a. Cek apakah user sedang diblokir pakai ``isUserBlocked(user)``.
+
      b. Kalau tidak diblokir maka
         - Membuka direktori ``/proc``.
         - Lalu iterasi semua folder di ``/proc``. Skip yang bukan angka (folder proses PID harus angka).
@@ -955,9 +963,11 @@ Fungsi revertProcess() adalah Membuka blokir user yang sebelumnya dibuat oleh fa
 1. Susun path lockfile /var/lock/debugmon_<user>.lock.
 2. Hapus file tersebut.
 3. Kalau berhasil
+
    a. Catat log debugmon_revert RUNNING.
+
    b. Tampilkan pesan user bisa akses normal.
-4. Kalau gagal (file gak ada) akan menampilkan pesan gak ada blokir.
+5. Kalau gagal (file gak ada) akan menampilkan pesan gak ada blokir.
 
 ##### Dokumentasi
 <img width="408" alt="image" src="https://github.com/user-attachments/assets/b4b18b4e-dd24-44bc-970c-40f208c0ccc9" />
