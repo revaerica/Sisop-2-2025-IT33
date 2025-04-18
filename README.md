@@ -200,6 +200,11 @@ dengan cara di-input ke lokasi (https://dragon-pw-checker.vercel.app/) tadi.
 #### G. Kesimpulan  
 Program ini membantu "Observer" dalam menganalisis clues yang tersebar, memastikan hanya fragment yang valid diproses, dan menerjemahkan pesan tersembunyi dari Seeker menggunakan ROT13. Dengan modularitas fungsi, program lebih terstruktur dan mudah dikembangkan untuk kebutuhan misi selanjutnya.
 
+### Dokumentasi
+Dokumentasi pengerjaan nomor 1
+#### [1] Jika dijalankan ./action
+Perintah ``./action`` akan mendownload dan unzip dari link google drive yang isi filenya ada folder CLues beserta isinya folder
+![desc](101 action.png)
 ## Soal 2
 ### Oleh: Ni'mah Fauziyyah A
 
