@@ -470,6 +470,41 @@ Format:
 
 ---
 
+### Dokumentasi
+Dokumentasi pengerjaan nomor 2 <br> <br>
+
+#### [1] Jika dijalankan ./starterkit
+Perintah ``./starterkit`` akan mendownload dan unzip dari link google drive dan akan membuat folder starter_kit untuk menyimpan seluruh file dari link tersebut, tetapi di dalam folder starter_kit nama file masih terenkripsi, belum nama file yang jelas <br>
+![desc](assets/201%20starterkit.png) <br>
+
+### [2] Decrypt
+Perintah ``./starterkit --decrypt `` akan menampilkan PID baru yang sedang dijalankan saat itu dan menampilkan di dalam file log <br>
+![desc](assets/202%20decrypt.png) <br>
+
+### [3] Quarantine
+Perintah ``./starterkit --quarantine`` akan memindahkan file dari folder starter_kit ke dalam folder quarantine dan sudah tidak terenkripsi atau nama file sudah jelas <br>
+![desc](assets/203.1%20quarantine.png) <br>
+Menampilkan aktivitas perpindahan file ke dalam activity.log
+![desc](assets/203.2%20log%20quarantine.png) <br>
+
+### [4] Return
+Perintah ``./starterkit --return`` akan memindahkan file dari folder quarantine ke dalam folder starter_kit lagi dan sudah tidak terenkripsi atau nama file sudah jelas <br>
+![desc](assets/204.1%20return.png) <br>
+Menampilkan aktivitas perpindahan file ke dalam activity.log
+![desc](assets/204.2%20log%20return.png) <br>
+
+### [5] Eradicate
+Menghapus file yang ada pada folder quarantine, disini saya mencoba membuat file baru didalam quarantine "halooo.txt" <br>
+![desc](assets/205%20eradicate.png) <br>
+
+### [6] Shutdown
+Mematikan PID yang sedang berjalan dan mencatat ke dalam activity.log <br>
+![desc](assets/206%20shutdown.png) <br>
+
+### [7] Error Handling
+Output / arahan jika user salah memasukkan perintah <br>
+![desc](assets/207%20eror%20handling.png) <br>
+
 #### H. Kesimpulan
 Program ini dirancang untuk membantu Kanade dalam menganalisis file berbahaya, memisahkan file mencurigakan, dan menjaga sistem tetap aman. Setiap fitur dilengkapi logging dan keamanan dasar sehingga praktis digunakan.
 
