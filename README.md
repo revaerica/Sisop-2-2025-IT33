@@ -788,10 +788,34 @@ void daemonUser(const char *user) {
     }
 }
 ```
-
+daemonUser() membuat background service yang
+- Jalan terus di background
+- Tiap 5 detik cek semua proses di ``/proc``
+- Kalau proses milik user target → tulis log “RUNNING”
+- Gak ngapa-ngapain kalau user-nya sedang diblokir (cek pakai ``isUserBlocked()``)
+  1. Fork proses
+     a. Kalau fork gagal → exit.
+     b. Kalau di parent >> menyimpan PID child ke file ``PIDFILE_FMT``. lalu Parent keluar.
+  2. Setup daemon di child
+     a. Set ``umask(0)``.
+     b. Buat session baru manggunakan ``setsid()``.
+     c. Pindah ke root directory /.
+     d. Tutup stdin, stdout, stderr biar lepas dari terminal.
+  3. Mengambil UID target menggunakan ``get_uid(user)``.
+  4. Loop terus menerus menggunakan ``while(1)``.
+  5. Di tiap iterasi
+     a. Cek apakah user sedang diblokir pakai ``isUserBlocked(user)``.
+     b. Kalau tidak diblokir maka
+        - Membuka direktori ``/proc``.
+        - Lalu iterasi semua folder di ``/proc``. Skip yang bukan angka (folder proses PID harus angka).
+        - Buka file ``/proc/[pid]/status``.
+        - Baca>> **Uid: → UID proses** dan **Name: → Nama proses**.
+        - Kalau UID proses = UID target, maka panggil ``tulisLog(name, "RUNNING")``.
+        - Tutup ``/proc``.
+        - Tunggu 5 detik sebelum ulang lagi agar daemon tidak boros CPU
 
 ##### Dokumentasi
-<img width="590" alt="image" src="https://github.com/user-attachments/assets/c03c6c21-3434-4046-b7ea-2f6ac4131ad8" />
+<img width="559" alt="image" src="https://github.com/user-attachments/assets/4e2f1c5e-a8b2-496e-979c-63bd93017537" />
 
 #### c.	Menghentikan pengawasan
 User mulai panik karena setiap gerak-geriknya diawasi! Dia pun memohon pada Doraemon untuk menghentikannya dengan:
@@ -822,6 +846,20 @@ void stopProcess(const char *user) {
     }
 }
 ```
+Fungsi dari ``stopProses()`` adalah untuk menghentikan daemon debugmon yang lagi monitor user tertentu. Caranya dengan baca PID daemon dari file, lalu kill proses-nya.
+1. Bikin path file PID user.
+   ``PIDFILE_FMT`` itu format string buat simpen path file PID, misal: ``/var/run/debugmon_%s.pid``
+2. Cek apakah file PID ada.
+3. Kalau nggak ada → tampil “No active daemon found.”
+4. Baca isi file (PID daemon).
+5. Kirim sinyal ``SIGTERM`` ke PID daemon.
+   a. Kalau berhasil
+      - Hapus file PID.
+      - Tulis log ``debugmon_stop``.
+      - Tampil “Monitoring stopped.”
+   b. Kalau gagal
+      - Tampil pesan error pakai ``perror()``.
+
 
 ##### Dokumentasi
 <img width="524" alt="image" src="https://github.com/user-attachments/assets/63ab52cd-cb10-4289-8d5e-b3d211904140" />
@@ -883,8 +921,16 @@ void failProcess(const char *user) {
      printf("All processes for user %s have been terminated and blocked.\n", user);
  }
 ```
+Pada failProcess ini yaitu Menggagalkan Semua Proses User (./debugmon fail <user>)
+1. Saat command ./debugmon fail <user> dijalankan
+2. Debugmon mencari semua proses milik user tersebut.
+3. Semua proses yang sedang berjalan langsung di-KILL (kecuali proses penting kayak debugmon, bash, zsh, systemd, dll).
+4. Setiap proses yang dibunuh dicatat ke file log dengan status FAILED.
+5. Dibuatkan file lock (lockfile) untuk user itu → artinya user tidak bisa lagi menjalankan proses lain selama lockfile ada.
+6. Proses daemon-nya akan ngecek lockfile ini → kalau ketemu, daemon-nya berhenti ngelog karena user udah diblokir.
 
 ##### Dokumentasi
+<img width="959" alt="image" src="https://github.com/user-attachments/assets/7d5dd0fb-167f-4af3-9d6b-a2b742af5230" />
 
 
 #### e.	Mengizinkan user untuk kembali menjalankan proses
@@ -905,6 +951,16 @@ void revertProcess(const char *user) {
      }
  }
 ```
+Fungsi revertProcess() adalah Membuka blokir user yang sebelumnya dibuat oleh failProcess() dengan cara menghapus lockfile milik user tersebut.
+1. Susun path lockfile /var/lock/debugmon_<user>.lock.
+2. Hapus file tersebut.
+3. Kalau berhasil
+   a. Catat log debugmon_revert RUNNING.
+   b. Tampilkan pesan user bisa akses normal.
+4. Kalau gagal (file gak ada) akan menampilkan pesan gak ada blokir.
+
+##### Dokumentasi
+<img width="408" alt="image" src="https://github.com/user-attachments/assets/b4b18b4e-dd24-44bc-970c-40f208c0ccc9" />
 
 #### f.	Mencatat ke dalam file log
 Sebagai dokumentasi untuk mengetahui apa saja yang debugmon lakukan di komputer user, debugmon melakukan pencatatan dan penyimpanan ke dalam file debugmon.log untuk semua proses yang dijalankan dengan format
@@ -928,3 +984,22 @@ void tulisLog(const char *procName, const char *status) {
     fclose(log);
 }
 ```
+Fungsi tulisLog adalah untuk mencatat aktivitas atau status proses ke dalam file log.
+1. Buka file log LOGFILE dalam mode append ("a").
+2. Jika gagal, tampilkan pesan error dan keluar.
+3. Ambil waktu lokal saat ini (time() dan localtime()).
+4. Tulis log ke file dengan format:
+   **[dd:mm:yyyy]-[HH:MM:SS]_procName_status**
+5. Tutup file log.
+
+##### Dokumentasi
+<img width="773" alt="image" src="https://github.com/user-attachments/assets/8f6bbc4b-95bb-403b-984a-306d40a86d6a" />
+<img width="733" alt="image" src="https://github.com/user-attachments/assets/1786b42c-e168-4bee-b124-b67b3447d96b" />
+<img width="623" alt="image" src="https://github.com/user-attachments/assets/696c7335-485a-4cbd-acf3-1cbec78bb709" />
+
+##### Kendala
+1. Di nomor 4 ini fungsi failProcess dan revertProcess sebenarnya dilakukan revisi. Saya sudah sempat merevisi, tetapi saat difail dia tidak keluar dari User dan tetap berada di terminal. Lalu saya tetap menggunakan code awal untuk failProcess dan revertProcess yang berhasil keluar dari user serta me-revert dari user serta root.
+2. Untuk nomor 3, saya sempat mencoba mengerjakan dengan menginstall virtualbox dan Ubuntu terlebih dahulu. Namun, saya terus terkena malware dan ada keterbatasan waktu juga.
+   ![Screenshot 2025-04-11 072932](https://github.com/user-attachments/assets/1bcecaee-4aa8-4427-9ddb-f43d160c799f)
+
+   ![Screenshot 2025-04-12 155537](https://github.com/user-attachments/assets/9e6118ea-087a-43f7-9899-5685cba57472)
