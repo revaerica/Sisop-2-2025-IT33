@@ -201,10 +201,32 @@ dengan cara di-input ke lokasi (https://dragon-pw-checker.vercel.app/) tadi.
 Program ini membantu "Observer" dalam menganalisis clues yang tersebar, memastikan hanya fragment yang valid diproses, dan menerjemahkan pesan tersembunyi dari Seeker menggunakan ROT13. Dengan modularitas fungsi, program lebih terstruktur dan mudah dikembangkan untuk kebutuhan misi selanjutnya.
 
 ### Dokumentasi
-Dokumentasi pengerjaan nomor 1
+Dokumentasi pengerjaan nomor 1 <br> <br>
+
 #### [1] Jika dijalankan ./action
-Perintah ``./action`` akan mendownload dan unzip dari link google drive yang isi filenya ada folder CLues beserta isinya folder <br>
-![nomor1](assets/101%20action.png)
+Perintah ``./action`` akan mendownload dan unzip dari link google drive yang isi filenya ada folder CLues beserta isinya folder
+![nomor1](assets/101%20action.png) <br>
+
+### [2] Filter Folder
+Perintah ``./action -m Filter`` akan memfilter file dengan 5 huruf / (1.txt) dan (a.tx) , 1 sampai 6 dan a sampai f yang ada di semua folder Clues, lalu menghapus semua file yang tidak memenuhi ketentuan tersebut. <br>
+![desc](assets/102%20Filter.png) <br>
+
+### [3] Menyatukan isi file dari txt
+Perintah ``./action -m Combine`` akan menjadikan satu seluruh isi file yang ada di folder Filtered / isi dalam file txt ke dalam file Combined.txt <br>
+![desc](assets/103.1%20Combine.png) <br>
+Dijadikan satu semua isinya, tetapi masih dalam keadaan huruf yang asli / belum di rot13
+![desc](assets/103.2%20Isi%20Combine.png) <br>
+
+### [4] Decode 
+Perintah ``./action -m Decoded`` akan menjalankan rot13 dari file Combine dan mencari 13 huruf setelahnya dalam file Combine dan hasilnya ada di file Decoded.txt <br>
+![desc](assets/104.1%20Decode.png) <br>
+Isi dari file Decode.txt
+![desc](assets/104.2%20Isi%20Decode.png) <br>
+
+### [5] Input password
+Jika password sudah terlihat, saya input ke link lokasi yang telah disediakan <br>
+Berikut tampilan password yang saya input dan ternyata benar <br>
+![desc](assets/105%20Input%20Password.png) <br>
 
 ## Soal 2
 ### Oleh: Ni'mah Fauziyyah A
