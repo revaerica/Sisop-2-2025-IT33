@@ -794,33 +794,36 @@ daemonUser() membuat background service yang
 - Kalau proses milik user target → tulis log “RUNNING”
 - Gak ngapa-ngapain kalau user-nya sedang diblokir (cek pakai ``isUserBlocked()``)
 
-  1. Fork proses
-     a. Kalau fork gagal → exit.
+1. Fork proses
+  
+   a. Kalau fork gagal → exit.
      
-     b. Kalau di parent >> menyimpan PID child ke file ``PIDFILE_FMT``. lalu Parent keluar.
+   b. Kalau di parent >> menyimpan PID child ke file ``PIDFILE_FMT``. lalu Parent keluar.
      
-  3. Setup daemon di child
-     a. Set ``umask(0)``.
+2. Setup daemon di child
 
-     b. Buat session baru manggunakan ``setsid()``.
+   a. Set ``umask(0)``.
 
-     c. Pindah ke root directory /.
+   b. Buat session baru manggunakan ``setsid()``.
 
-     d. Tutup stdin, stdout, stderr biar lepas dari terminal.
+   c. Pindah ke root directory /.
+
+   d. Tutup stdin, stdout, stderr biar lepas dari terminal.
      
-  5. Mengambil UID target menggunakan ``get_uid(user)``.
-  6. Loop terus menerus menggunakan ``while(1)``.
-  7. Di tiap iterasi
-     a. Cek apakah user sedang diblokir pakai ``isUserBlocked(user)``.
+3. Mengambil UID target menggunakan ``get_uid(user)``.
+4. Loop terus menerus menggunakan ``while(1)``.
+5. Di tiap iterasi
 
-     b. Kalau tidak diblokir maka
-        - Membuka direktori ``/proc``.
-        - Lalu iterasi semua folder di ``/proc``. Skip yang bukan angka (folder proses PID harus angka).
-        - Buka file ``/proc/[pid]/status``.
-        - Baca>> **Uid: → UID proses** dan **Name: → Nama proses**.
-        - Kalau UID proses = UID target, maka panggil ``tulisLog(name, "RUNNING")``.
-        - Tutup ``/proc``.
-        - Tunggu 5 detik sebelum ulang lagi agar daemon tidak boros CPU
+   a. Cek apakah user sedang diblokir pakai ``isUserBlocked(user)``.
+
+   b. Kalau tidak diblokir maka
+      - Membuka direktori ``/proc``.
+      - Lalu iterasi semua folder di ``/proc``. Skip yang bukan angka (folder proses PID harus angka).
+      - Buka file ``/proc/[pid]/status``.
+      - Baca>> **Uid: → UID proses** dan **Name: → Nama proses**.
+      - Kalau UID proses = UID target, maka panggil ``tulisLog(name, "RUNNING")``.
+      - Tutup ``/proc``.
+      - Tunggu 5 detik sebelum ulang lagi agar daemon tidak boros CPU
 
 ##### Dokumentasi
 <img width="559" alt="image" src="https://github.com/user-attachments/assets/4e2f1c5e-a8b2-496e-979c-63bd93017537" />
