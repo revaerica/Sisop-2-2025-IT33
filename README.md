@@ -938,6 +938,8 @@ Pada failProcess ini yaitu Menggagalkan Semua Proses User (./debugmon fail <user
 6. Proses daemon-nya akan ngecek lockfile ini → kalau ketemu, daemon-nya berhenti ngelog karena user udah diblokir.
 
 ##### Dokumentasi
+saat command ./debugmon fail <user> berhasil menggagalkan semua proses user sehingga keluar dari proses monitoring tersebut
+
 <img width="959" alt="image" src="https://github.com/user-attachments/assets/7d5dd0fb-167f-4af3-9d6b-a2b742af5230" />
 
 
