@@ -204,7 +204,7 @@ Program ini membantu "Observer" dalam menganalisis clues yang tersebar, memastik
 Dokumentasi pengerjaan nomor 1
 #### [1] Jika dijalankan ./action
 Perintah ``./action`` akan mendownload dan unzip dari link google drive yang isi filenya ada folder CLues beserta isinya folder <br>
-![desc](101 action.png)
+![nomor1](assets/"101 action.png")
 ## Soal 2
 ### Oleh: Ni'mah Fauziyyah A
 
