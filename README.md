@@ -518,7 +518,24 @@ void listProcess(const char *user) {
      closedir(proc);
  }
 ```
+Fungsi listProcess() berfungsi untuk menampilkan daftar proses milik user tertentu yang sedang berjalan di sistem Linux, beserta informasi PID, nama proses, waktu CPU yang terpakai, dan penggunaan memori proses.
+1. Ambil UID user target menggunakan fungsi get_uid(). Jika gagal, fungsi langsung keluar.
+2. Buka direktori /proc, yaitu direktori virtual di Linux yang berisi informasi proses. Jika gagal dibuka, tampilkan pesan error.
+3. Tampilkan header tabel untuk daftar proses.
+4. Loop ke semua entitas dalam /proc, dan hanya proses yang nama direktori-nya berupa angka (yaitu PID) yang diproses.
+5. Buka file /proc/<pid>/status untuk membaca informasi proses tersebut.
+   Dari file status, baca:
+   - Uid: untuk mengetahui pemilik proses.
+   - Name: untuk nama proses.
+   - VmRSS: untuk memori yang dipakai proses (dalam KB).
+6. Jika UID proses sesuai dengan target, lanjut proses Buka file /proc/<pid>/stat untuk membaca waktu CPU proses.
+7. Ambil nilai utime (waktu CPU di user mode) dan stime (di kernel mode).
+8. Hitung total waktu CPU dalam detik menggunakan rumus **(utime + stime) / sysconf(_SC_CLK_TCK)**
+9. Tampilkan informasi proses ke terminal: PID, nama proses, waktu CPU, dan memori.
+10. Tulis log status proses ke log file menggunakan fungsi tulisLog() dengan status RUNNING.
+11. Setelah semua proses dibaca, tutup direktori /proc.
 
+##### Dokumentasi
 
 ##### Revisi Code
 Menambahkan presentase CPU dan MEM
