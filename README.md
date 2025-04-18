@@ -218,9 +218,9 @@ Dijadikan satu semua isinya, tetapi masih dalam keadaan huruf yang asli / belum 
 ![desc](assets/103.2%20Isi%20Combine.png) <br>
 
 ### [4] Decode 
-Perintah ``./action -m Decoded`` akan menjalankan rot13 dari file Combine dan mencari 13 huruf setelahnya dalam file Combine dan hasilnya ada di file Decoded.txt <br>
+Perintah ``./action -m Decode`` akan menjalankan rot13 dari file Combine dan mencari 13 huruf setelahnya dalam file Combine dan hasilnya ada di file Decoded.txt <br>
 ![desc](assets/104.1%20Decode.png) <br>
-Isi dari file Decode.txt
+Isi dari file Decode.txt <br>
 ![desc](assets/104.2%20Isi%20Decode.png) <br>
 
 ### [5] Input password
