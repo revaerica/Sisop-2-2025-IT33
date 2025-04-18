@@ -580,7 +580,7 @@ void listProcess(const char *user) {
      closedir(proc);
  }
 ```
-Fungsi listProcess berfungsi untuk menampilkan daftar proses milik user tertentu yang sedang berjalan di sistem Linux, beserta informasi PID, nama proses, waktu CPU yang terpakai, dan penggunaan memori proses.
+Fungsi listProcess berfungsi untuk menampilkan daftar proses milik user tertentu yang sedang berjalan di sistem Linux, beserta informasi PID, COMMAND, CPU usage, dan Memory usage
 1. Ambil UID user target menggunakan fungsi ``get_uid()``. Jika gagal, fungsi langsung keluar.
 2. Buka direktori ``/proc``, yaitu direktori virtual di Linux yang berisi informasi proses. Jika gagal dibuka, tampilkan pesan error.
 3. Tampilkan header tabel untuk daftar proses.
@@ -593,7 +593,7 @@ Fungsi listProcess berfungsi untuk menampilkan daftar proses milik user tertentu
 6. Jika UID proses sesuai dengan target, lanjut proses Buka file ``/proc/<pid>/stat`` untuk membaca waktu CPU proses.
 7. Ambil nilai utime (waktu CPU di user mode) dan stime (di kernel mode).
 8. Hitung total waktu CPU dalam detik menggunakan rumus **(utime + stime) / sysconf(_SC_CLK_TCK)**
-9. Tampilkan informasi proses ke terminal: PID, nama proses, waktu CPU, dan memori.
+9. Tampilkan informasi proses ke terminal: PID, COMMAND, waktu CPU, dan memori.
 10. Tulis log status proses ke log file menggunakan fungsi ``tulisLog()`` dengan status RUNNING.
 11. Setelah semua proses dibaca, tutup direktori ``/proc``.
 
@@ -701,6 +701,25 @@ void listProcess(const char *user) {
     closedir(proc);
 }
 ```
+1. Mengambil UID dari nama user pakai ``get_uid()``. Kalau UID tidak ketemu, fungsi langsung keluar.
+2. Membuka direktori ``/proc`` untuk baca semua proses.
+3. Baca total memori sistem dari ``/proc/meminfo`` (ambil MemTotal).
+4. Baca total waktu CPU sistem dari ``/proc/stat`` (ambil baris cpu).
+5. Iterasi semua entry di /proc:
+   a. Cek kalau nama folder-nya angka (berarti PID proses)
+   b. Baca ``/proc/[pid]/status``
+     - Ambil UID proses
+     - Ambil COMMAND
+     - Ambil penggunaan memori RSS (VmRSS)
+7. Kalau UID-nya sama dengan UID user target:
+   a. Baca ``/proc/[pid]/stat``
+   b. Ambil waktu CPU user (utime) dan kernel (stime) dan hitung:
+      - **Waktu CPU (detik) = (utime + stime) / sysconf(_SC_CLK_TCK)**
+      - **Persentase CPU = (utime + stime) / totalCpuTime × 100**
+      - **Persentase Memori = VmRSS / MemTotal × 100**
+8. Menampilkan PID, COMMAND, Waktu CPU, Memori, Persentase CPU, dan Persentase Memori ke terminal
+9. Tulis log status proses (panggil tulisLog() dengan status RUNNING)
+10. Tutup direktori /proc
 
 ##### Dokumentasi
 <img width="818" alt="image" src="https://github.com/user-attachments/assets/3d7b725b-0e8b-494f-8462-83be36a1543a" />
@@ -769,6 +788,7 @@ void daemonUser(const char *user) {
     }
 }
 ```
+
 
 ##### Dokumentasi
 <img width="590" alt="image" src="https://github.com/user-attachments/assets/c03c6c21-3434-4046-b7ea-2f6ac4131ad8" />
