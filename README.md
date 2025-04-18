@@ -469,6 +469,8 @@ Format:
 ```
 
 ---
+#### H. Kesimpulan
+Program ini dirancang untuk membantu Kanade dalam menganalisis file berbahaya, memisahkan file mencurigakan, dan menjaga sistem tetap aman. Setiap fitur dilengkapi logging dan keamanan dasar sehingga praktis digunakan.
 
 ### Dokumentasi
 Dokumentasi pengerjaan nomor 2 <br> <br>
@@ -504,9 +506,6 @@ Mematikan PID yang sedang berjalan dan mencatat ke dalam activity.log <br>
 ### [7] Error Handling
 Output / arahan jika user salah memasukkan perintah <br>
 ![desc](assets/207%20eror%20handling.png) <br>
-
-#### H. Kesimpulan
-Program ini dirancang untuk membantu Kanade dalam menganalisis file berbahaya, memisahkan file mencurigakan, dan menjaga sistem tetap aman. Setiap fitur dilengkapi logging dan keamanan dasar sehingga praktis digunakan.
 
 ## Soal 4
 ### Oleh: Revalina Erica Permatasari
