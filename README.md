@@ -518,24 +518,25 @@ void listProcess(const char *user) {
      closedir(proc);
  }
 ```
-Fungsi listProcess() berfungsi untuk menampilkan daftar proses milik user tertentu yang sedang berjalan di sistem Linux, beserta informasi PID, nama proses, waktu CPU yang terpakai, dan penggunaan memori proses.
-1. Ambil UID user target menggunakan fungsi get_uid(). Jika gagal, fungsi langsung keluar.
-2. Buka direktori /proc, yaitu direktori virtual di Linux yang berisi informasi proses. Jika gagal dibuka, tampilkan pesan error.
+Fungsi listProcess berfungsi untuk menampilkan daftar proses milik user tertentu yang sedang berjalan di sistem Linux, beserta informasi PID, nama proses, waktu CPU yang terpakai, dan penggunaan memori proses.
+1. Ambil UID user target menggunakan fungsi ``get_uid()``. Jika gagal, fungsi langsung keluar.
+2. Buka direktori ``/proc``, yaitu direktori virtual di Linux yang berisi informasi proses. Jika gagal dibuka, tampilkan pesan error.
 3. Tampilkan header tabel untuk daftar proses.
-4. Loop ke semua entitas dalam /proc, dan hanya proses yang nama direktori-nya berupa angka (yaitu PID) yang diproses.
-5. Buka file /proc/<pid>/status untuk membaca informasi proses tersebut.
+4. Loop ke semua entitas dalam ``/proc``, dan hanya proses yang nama direktori-nya berupa angka (yaitu PID) yang diproses.
+5. Buka file ``/proc/<pid>/status`` untuk membaca informasi proses tersebut.
    Dari file status, baca:
    - Uid: untuk mengetahui pemilik proses.
    - Name: untuk nama proses.
    - VmRSS: untuk memori yang dipakai proses (dalam KB).
-6. Jika UID proses sesuai dengan target, lanjut proses Buka file /proc/<pid>/stat untuk membaca waktu CPU proses.
+6. Jika UID proses sesuai dengan target, lanjut proses Buka file ``/proc/<pid>/stat`` untuk membaca waktu CPU proses.
 7. Ambil nilai utime (waktu CPU di user mode) dan stime (di kernel mode).
 8. Hitung total waktu CPU dalam detik menggunakan rumus **(utime + stime) / sysconf(_SC_CLK_TCK)**
 9. Tampilkan informasi proses ke terminal: PID, nama proses, waktu CPU, dan memori.
-10. Tulis log status proses ke log file menggunakan fungsi tulisLog() dengan status RUNNING.
-11. Setelah semua proses dibaca, tutup direktori /proc.
+10. Tulis log status proses ke log file menggunakan fungsi ``tulisLog()`` dengan status RUNNING.
+11. Setelah semua proses dibaca, tutup direktori ``/proc``.
 
 ##### Dokumentasi
+<img width="878" alt="image" src="https://github.com/user-attachments/assets/bc3dc091-acbd-4abd-a0b1-232f233899c3" />
 
 ##### Revisi Code
 Menambahkan presentase CPU dan MEM
@@ -639,6 +640,9 @@ void listProcess(const char *user) {
 }
 ```
 
+##### Dokumentasi
+<img width="818" alt="image" src="https://github.com/user-attachments/assets/3d7b725b-0e8b-494f-8462-83be36a1543a" />
+
 #### b. Memasang mata-mata dalam mode daemon
 Doraemon ingin agar Debugmon terus memantau user secara otomatis. Doraemon pun menjalankan program ini secara daemon dan melakukan pencatatan ke dalam file log dengan menjalankan:
 **./debugmon daemon <user>**
@@ -704,6 +708,9 @@ void daemonUser(const char *user) {
 }
 ```
 
+##### Dokumentasi
+<img width="590" alt="image" src="https://github.com/user-attachments/assets/c03c6c21-3434-4046-b7ea-2f6ac4131ad8" />
+
 #### c.	Menghentikan pengawasan
 User mulai panik karena setiap gerak-geriknya diawasi! Dia pun memohon pada Doraemon untuk menghentikannya dengan:
 **./debugmon stop <user>**
@@ -733,6 +740,9 @@ void stopProcess(const char *user) {
     }
 }
 ```
+
+##### Dokumentasi
+<img width="524" alt="image" src="https://github.com/user-attachments/assets/63ab52cd-cb10-4289-8d5e-b3d211904140" />
 
 #### d.	Menggagalkan semua proses user yang sedang berjalan
 Doraemon yang iseng ingin mengerjai user dengan mengetik:
@@ -791,6 +801,9 @@ void failProcess(const char *user) {
      printf("All processes for user %s have been terminated and blocked.\n", user);
  }
 ```
+
+##### Dokumentasi
+
 
 #### e.	Mengizinkan user untuk kembali menjalankan proses
 Karena kasihan, Shizuka meminta Doraemon untuk memperbaiki semuanya. Doraemon pun menjalankan:
